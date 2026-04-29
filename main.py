@@ -1,3 +1,4 @@
+import os
 import yfinance as yf
 from flask import Flask, render_template, request, redirect, flash
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
@@ -8,7 +9,8 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "reis_tech_chave_secreta" # ESSENCIAL para o feedback funcionar
 
-# Configuração do Banco de Dados
+# --- CONFIGURAÇÃO DO BANCO DE DADOS ---
+# O Render consegue ler o arquivo .db que você subiu no GitHub
 engine = create_engine('sqlite:///banco_teste.db')
 Base = declarative_base()
 
@@ -22,10 +24,11 @@ class HistoricoPreco(Base):
 Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(bind=engine)
 
+# --- LÓGICA DE BUSCA (YFINANCE) ---
 def buscar_e_salvar(ticker_escolhido):
     try:
         acao = yf.Ticker(ticker_escolhido)
-        # Tenta buscar o preço atual
+        # Tenta buscar o preço atual usando fast_info
         info = acao.fast_info
         preco_agora = info['last_price']
         
@@ -41,6 +44,7 @@ def buscar_e_salvar(ticker_escolhido):
     except Exception:
         return False
 
+# --- ROTAS ---
 @app.route("/", methods=["GET", "POST"])
 def index():
     db = SessionLocal()
@@ -60,5 +64,12 @@ def index():
     db.close()
     return render_template("index.html", historico=historico)
 
+# --- INICIALIZAÇÃO PARA O RENDER (MUITO IMPORTANTE) ---
 if __name__ == "__main__":
-    app.run(debug=True)
+    # 1. Pegamos a porta que o Render nos dá (variável de ambiente)
+    # 2. Se estiver rodando no seu PC, ele usa a 5000 como padrão
+    port = int(os.environ.get("PORT", 5000))
+    
+    # 3. host='0.0.0.0' é o que permite o link externo funcionar
+    # 4. debug=False é o recomendado para quando o site está no ar
+    app.run(host='0.0.0.0', port=port, debug=False)
