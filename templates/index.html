@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reis Tech - Rastreador Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen">
+
+    <div class="container mx-auto px-4 py-10">
+        <h1 class="text-4xl font-bold text-center text-blue-500 mb-10">
+            RASTREADOR DE ATIVOS <span class="text-white text-2xl block border-t border-blue-900 mt-2 pt-2">REIS TECH</span>
+        </h1>
+
+        <!-- Feedback de Status -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div id="alert" class="max-w-md mx-auto mb-6 p-4 rounded-lg {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }} text-white font-bold shadow-2xl text-center">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Formulário e Atalhos -->
+        <div class="max-w-xl mx-auto bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700 mb-10">
+            <form method="POST" id="searchForm" class="flex flex-col gap-6">
+                <div>
+                    <label class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-2 block">Consulta Rápida</label>
+                    <div class="flex gap-2">
+                        <input type="text" name="ticker" id="ticker" placeholder="Ex: PETR4.SA" required
+                            class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl font-bold transition-all transform active:scale-95">
+                            Consultar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Botões de Atalho (Facilidade de Uso) -->
+                <div>
+                    <p class="text-xs text-gray-500 mb-3 font-semibold uppercase">Atalhos Populares:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="quickSearch('PETR4.SA')" class="bg-gray-700 hover:bg-blue-900 px-3 py-1 rounded-full text-xs transition-all border border-gray-600">⛽ Petrobras</button>
+                        <button type="button" onclick="quickSearch('VALE3.SA')" class="bg-gray-700 hover:bg-blue-900 px-3 py-1 rounded-full text-xs transition-all border border-gray-600">⛏️ Vale</button>
+                        <button type="button" onclick="quickSearch('ITUB4.SA')" class="bg-gray-700 hover:bg-blue-900 px-3 py-1 rounded-full text-xs transition-all border border-gray-600">🏦 Itaú</button>
+                        <button type="button" onclick="quickSearch('BTC-USD')" class="bg-gray-700 hover:bg-orange-900 px-3 py-1 rounded-full text-xs transition-all border border-gray-600">₿ Bitcoin</button>
+                        <button type="button" onclick="quickSearch('ETH-USD')" class="bg-gray-700 hover:bg-indigo-900 px-3 py-1 rounded-full text-xs transition-all border border-gray-600">⟠ Ethereum</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabela -->
+        <div class="max-w-4xl mx-auto rounded-2xl border border-gray-800 overflow-hidden shadow-2xl">
+            <table class="w-full text-left bg-gray-800">
+                <thead class="bg-gray-900/50 text-gray-400 text-xs uppercase">
+                    <tr>
+                        <th class="px-6 py-4">Ativo</th>
+                        <th class="px-6 py-4">Preço Atual</th>
+                        <th class="px-6 py-4 text-right">Horário da Consulta</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700/50">
+                    {% for registro in historico %}
+                    <tr class="hover:bg-gray-700/30 transition-all">
+                        <td class="px-6 py-4 font-black text-blue-400 tracking-tighter">{{ registro.ticker }}</td>
+                        <td class="px-6 py-4 font-mono text-green-400 text-lg">R$ {{ "%.2f"|format(registro.preco) }}</td>
+                        <td class="px-6 py-4 text-right text-xs text-gray-500">{{ registro.data_consulta.strftime('%H:%M:%S - %d/%m/%y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Função para os botões de atalho preencherem e enviarem o form
+        function quickSearch(ticker) {
+            document.getElementById('ticker').value = ticker;
+            document.getElementById('searchForm').submit();
+        }
+
+        // Faz o alerta sumir sozinho
+        setTimeout(() => {
+            const alert = document.getElementById('alert');
+            if(alert) alert.style.opacity = '0';
+            setTimeout(() => { if(alert) alert.remove(); }, 500);
+        }, 3000);
+    </script>
+</body>
+</html>
